@@ -4,10 +4,15 @@ import './App.css';
 import {Button,TextField} from '@material-ui/core'
 import Web3 from 'web3';
 
+import Card from '../abis/Card.json'
+
 
 function App(){
   const [address,setAddress]=useState()
   const [balance,setBalance]=useState()
+  const [contract,setContract]=useState()
+  const [totalSupply,setTotalSupply]=useState()
+  const [colors,setColors]=useState([])
   var web3=null
 
    const loadWeb3=async ()=>{
@@ -29,12 +34,34 @@ function App(){
   },[])
   
   const loadBlockchainData=async()=>{
+
+    const result=[]
     web3=window.web3
 
     web3.eth.getAccounts().then(accounts=>{
       setAddress(accounts[0])
       setUserBalance(accounts[0])
     })
+
+    const networkID=await web3.eth.net.getId()
+    const networkData=Card.networks[networkID]
+    if(networkData){
+      const abi=Card.abi
+      const address=networkData.address
+      const myContract=new web3.eth.Contract(abi,address)
+      setContract(myContract)
+      const totalSupply = await myContract.methods._id().call()
+      
+      for (var i=0;i<totalSupply;i++){
+          result.push( await myContract.methods.colors(i).call())
+      }
+      console.log(result)
+      setColors(result)
+
+    }else{
+      window.alert('smart contract not deployed to network')
+    }
+    
     
   }
 
@@ -62,7 +89,13 @@ function App(){
 
   const mintToken=(e)=>{
     e.preventDefault();
-    console.log('wassup')
+    const col=e.target[0].value
+    contract.methods.mint(col).send({from:address})
+    .once('receipt',(receipt)=>{
+      setColors([...colors,col])
+    })
+
+    
   }
 
 
@@ -128,6 +161,16 @@ function App(){
                 </Button>
                 
                 </form>
+                <div class="row text-center">
+                  {colors.map((color,key)=>{
+                    return(
+                    <div key={key} class="col-md-3 mb-3" style={{padding :20}}>
+                      <div class="token" style={{backgroundColor: color}}></div>
+                      <div>{color}</div>
+                    </div>
+                    )
+                  })}
+                </div>
               </div>
               
             </main>
