@@ -7,12 +7,14 @@ import Web3 from 'web3';
 import Card from '../abis/Card.json'
 
 
+
 function App(){
   const [address,setAddress]=useState()
   const [balance,setBalance]=useState()
   const [contract,setContract]=useState()
   const [totalSupply,setTotalSupply]=useState()
   const [colors,setColors]=useState([])
+  const [imageURI,setImageURI]=useState(null)
   var web3=null
 
    const loadWeb3=async ()=>{
@@ -99,6 +101,21 @@ function App(){
   }
 
 
+
+  const fileChosen=(e)=>{
+      let files=e.target.files
+      console.log(files)
+      let reader= new FileReader()
+      reader.readAsDataURL(files[0])
+      reader.onload=(e)=>{
+        
+        const dataURI=e.target.result
+        setImageURI(dataURI)
+      }
+      
+  }
+
+
     return (
       <div>
         <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
@@ -108,7 +125,7 @@ function App(){
             target="_blank"
             rel="noopener noreferrer"
           >
-            Welcome to a dectralized Application
+            Welcome to Magical Cards
           </a>
           <ul className="navbar-nav px-3">
             <li className="nav-item text-nowrap d-none d-sm-none d-sm-block">
@@ -171,7 +188,10 @@ function App(){
                     )
                   })}
                 </div>
+                <input type='file' name='file' onChange={(e)=>{fileChosen(e)}}/>
               </div>
+              {imageURI&& <img src={imageURI} height="200" />}
+              
               
             </main>
           </div>
