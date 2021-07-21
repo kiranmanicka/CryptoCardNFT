@@ -4,37 +4,60 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract Card is ERC721{
 
-     struct Token{
-        uint tokenID;
-        address ownerAddress;
+     struct Creature{
+        string name;
         string bio;
+        string imageURI;
         uint attackPoints;
         uint defensePoints;
         string specialMove;
     }
 
-    string[] public colors;
-    mapping(string=> bool) _colorExists;
+    mapping(address=> mapping(uint=>uint)) public _ownedTokens;
     uint public _id=0;
-    mapping (address=>bool) ownerExists;
-    mapping(address=>uint[]) public  ownerNFT;
+    Creature[] public creatures;
 
    
 
     constructor() ERC721('Card',"CARD") {
     }
 
-    function mint(string memory _color) public {
-        require(!_colorExists[_color]);
-        colors.push(_color);
+    function addTokenToOwner(address to,uint tokenID) private{
+        uint length=ERC721.balanceOf(to);
+        _ownedTokens[to][length]=tokenID;
+    }
+
+    function mint(
+    string memory name, 
+    string memory bio,
+    string memory imageURI,
+    uint attackPoints,
+    uint defensePoints,
+    string memory specialMove) 
+    public {
+        Creature memory what = Creature(name,bio,imageURI,attackPoints,defensePoints,specialMove);
+        creatures.push(what);
+        addTokenToOwner(msg.sender, _id);
         _mint(msg.sender, _id);
-        if(ownerExists[msg.sender]){
-            ownerNFT[msg.sender].push(_id);
-        }else{
-            ownerNFT[msg.sender].push(_id);
-        }
         _id=_id+1;
-        _colorExists[_color]=true;
+    }
+    
+    function getTokensByAddress(address to) public view returns(uint [] memory){
+        uint balance= ERC721.balanceOf(to);
+        uint[] memory tokensFromAddress= new uint[] (balance);
+        for(uint i=0;i<balance;i++){
+            tokensFromAddress[i]=(_ownedTokens[to][i]);
+        }
+        return tokensFromAddress;
+        
+    }
+    
+    function modifiedTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public {
+        _transfer(from, to, tokenId);
     }
 
 }
