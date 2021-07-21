@@ -13,7 +13,7 @@ function App(){
   const [balance,setBalance]=useState()
   const [contract,setContract]=useState()
   const [totalSupply,setTotalSupply]=useState()
-  const [colors,setColors]=useState([])
+  const [creatures,setCreatures]=useState([])
   const [imageURI,setImageURI]=useState(null)
   var web3=null
 
@@ -55,16 +55,13 @@ function App(){
       const totalSupply = await myContract.methods._id().call()
       
       for (var i=0;i<totalSupply;i++){
-          result.push( await myContract.methods.colors(i).call())
+          result.push( await myContract.methods.creatures(i).call())
       }
       console.log(result)
-      setColors(result)
-
+      setCreatures(result)
     }else{
       window.alert('smart contract not deployed to network')
     }
-    
-    
   }
 
 
@@ -91,11 +88,24 @@ function App(){
 
   const mintToken=(e)=>{
     e.preventDefault();
-    const col=e.target[0].value
-    contract.methods.mint(col).send({from:address})
+    const name=e.target[0].value
+    const bio=e.target[1].value
+    const imageDataURI=e.target[2].value
+    const attackPoints=e.target[3].value
+    const defensePoints=e.target[4].value
+    const specialMove=e.target[5].value
+
+    contract.methods.mint(name,bio,imageDataURI,attackPoints,defensePoints,specialMove)
+    .send({from:address})
+    .once('receipt',(receipt)=>{
+      setCreatures([...creatures,{name,bio,imageDataURI,attackPoints,defensePoints,specialMove}])
+      console.log('successful')
+    })
+
+    /*contract.methods.mint(col).send({from:address})
     .once('receipt',(receipt)=>{
       setColors([...colors,col])
-    })
+    })*/
 
     
   }
@@ -179,18 +189,25 @@ function App(){
                 
                 </form>
                 <div class="row text-center">
-                  {colors.map((color,key)=>{
-                    return(
-                    <div key={key} class="col-md-3 mb-3" style={{padding :20}}>
-                      <div class="token" style={{backgroundColor: color}}></div>
-                      <div>{color}</div>
-                    </div>
-                    )
-                  })}
+        
                 </div>
                 <input type='file' name='file' onChange={(e)=>{fileChosen(e)}}/>
               </div>
               {imageURI&& <img src={imageURI} height="200" />}
+                <form onSubmit={e=>mintToken(e)}>
+              <TextField required label="Name" variant="filled" />
+              <TextField required label="Bio" variant="filled" />
+              <TextField required label="image file" variant="filled" />
+              <TextField required label="attack points" type="number" variant="filled" />
+              <TextField required label="defense points" type="number" variant="filled" />
+              <TextField required label="special move" variant="filled" />
+              <Button
+                  style={{ margin: "15px" }}
+                  type="submit"
+                  variant="outlined"
+                  color="default"
+                >Mint Creature</Button>
+              </form>
               
               
             </main>
