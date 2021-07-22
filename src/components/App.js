@@ -102,12 +102,16 @@ function App(){
       console.log('successful')
     })
 
-    /*contract.methods.mint(col).send({from:address})
-    .once('receipt',(receipt)=>{
-      setColors([...colors,col])
-    })*/
-
     
+  }
+
+  const test=async()=>{
+    //const creature= await contract.methods.creatures(0).call()
+    const totalTokens= await contract.methods._id().call()
+    for (var i=0;i<totalTokens;i++){
+      const length = await contract.methods.creatures(i).call()
+      console.log(length)
+    }
   }
 
 
@@ -176,18 +180,6 @@ function App(){
                 </Button>
                 
                 </form>
-                <form onSubmit={e=>mintToken(e)}>
-                <TextField required label="Choose a Color" variant="filled"/>
-                <Button
-                  style={{ margin: "15px" }}
-                  type="submit"
-                  variant="outlined"
-                  color="default"
-                >
-                Mint
-                </Button>
-                
-                </form>
                 <div class="row text-center">
         
                 </div>
@@ -208,6 +200,20 @@ function App(){
                   color="default"
                 >Mint Creature</Button>
               </form>
+              <button onClick={test}>test</button>
+
+              <div className="row text-center">
+            { creatures.map((creature, key) => {
+              return(
+                <div key={key} className="col-md-3 mb-3">
+                  <div className="token" style={{ backgroundColor:'white' }}></div>
+                  <div>
+                    <h1>{creature.name}</h1>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
               
               
             </main>
