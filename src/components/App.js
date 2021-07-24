@@ -15,6 +15,7 @@ function App(){
   const [totalSupply,setTotalSupply]=useState()
   const [creatures,setCreatures]=useState([])
   const [imageURI,setImageURI]=useState(null)
+  const [webNew,setWeb3]=useState()
   var web3=null
 
    const loadWeb3=async ()=>{
@@ -28,6 +29,7 @@ function App(){
     else {
       window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
     }
+    setWeb3(window.web3)
   }
 
   useEffect(async()=>{
@@ -90,15 +92,14 @@ function App(){
     e.preventDefault();
     const name=e.target[0].value
     const bio=e.target[1].value
-    const imageDataURI=e.target[2].value
-    const attackPoints=e.target[3].value
-    const defensePoints=e.target[4].value
-    const specialMove=e.target[5].value
+    const attackPoints=e.target[2].value
+    const defensePoints=e.target[3].value
+    const specialMove=e.target[4].value
 
-    contract.methods.mint(name,bio,imageDataURI,attackPoints,defensePoints,specialMove)
+    contract.methods.mint(name,bio,imageURI,attackPoints,defensePoints,specialMove)
     .send({from:address})
     .once('receipt',(receipt)=>{
-      setCreatures([...creatures,{name,bio,imageDataURI,attackPoints,defensePoints,specialMove}])
+      setCreatures([...creatures,{name,bio,imageURI,attackPoints,defensePoints,specialMove}])
       console.log('successful')
     })
 
@@ -129,6 +130,25 @@ function App(){
       
   }
 
+  const buyToken=async(creature)=>{
+    const location = creatures.indexOf(creature)
+    console.log(location)
+    const creat = await contract.methods.creatures(location).call()
+    console.log(creat)
+    const value=creat.value
+    console.log(value)
+    const creatureAddress=await contract.methods.ownerOf(location).call()
+    console.log(creatureAddress)
+    await contract.methods.transferToken(creatureAddress,address,location).send({from:address});
+    console.log('working fine here')
+    await webNew.eth.sendTransaction({
+      from:address,
+      to: creatureAddress,
+      value: value,
+    })
+    console.log('transaction complete')
+  }
+
 
     return (
       <div>
@@ -139,7 +159,7 @@ function App(){
             target="_blank"
             rel="noopener noreferrer"
           >
-            Welcome to Magical Cards
+            Magical Cards
           </a>
           <ul className="navbar-nav px-3">
             <li className="nav-item text-nowrap d-none d-sm-none d-sm-block">
@@ -209,7 +229,9 @@ function App(){
                   <div className="token" style={{ backgroundColor:'white' }}></div>
                   <div>
                     <h1>{creature.name}</h1>
+                    <h2>{creature.value}</h2>
                   </div>
+                  <button onClick={()=>{buyToken(creature)}}>Buy Token</button>
                 </div>
               )
             })}

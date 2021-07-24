@@ -7,6 +7,8 @@ contract Card is ERC721{
     uint public _id=0;
     Creature[] public creatures;
     Battle[] public battles;
+    mapping(uint=>address) private owners;
+    mapping(address=>uint) private balance;
     
     struct Creature {
         string name;
@@ -40,12 +42,29 @@ contract Card is ERC721{
         ,attackPoints:attackPoints,defensePoints:defensePoints,specialMove:specialMove,value:2000000000000000});
         creatures.push(what);
         _mint(msg.sender, _id);
+        balance[msg.sender]+=1;
+        owners[_id]=msg.sender;
+        
         _id=_id+1;
     }
     
+    function ownerOf(uint tokenID) public view override returns(address){
+        return owners[tokenID];
+    }
+    
+    function balanceOf(address from) public view override returns(uint){
+        return balance[from];
+    }
+    
+    function transferToken(address from, address to , uint tokenID) public{
+        balance[from] -= 1;
+        balance[to] += 1;
+        owners[tokenID] = to;
+    }
+    
     function getTokensByAddress(address to) public view returns(uint [] memory){
-        uint balance= ERC721.balanceOf(to);
-        uint[] memory tokensFromAddress= new uint[] (balance);
+        uint length= balanceOf(to);
+        uint[] memory tokensFromAddress= new uint[] (length);
         uint x=0;
         for(uint i=0;i<_id;i++){
             if(ownerOf(i)==to){
@@ -56,10 +75,11 @@ contract Card is ERC721{
         return tokensFromAddress;
     }
 
-    function createBattle(address host, uint tokenID )public{
-        Battle memory battle= Battle({host:host, hostCreature:tokenID});
+    function createBattle(uint tokenID )public{
+        Battle memory battle= Battle({host:ownerOf(tokenID), hostCreature:tokenID});
         battles.push(battle);
     }
+    
     
     function joinBattle(uint battleID,uint tokenID) public returns(uint){
         Battle memory battle= battles[battleID];
